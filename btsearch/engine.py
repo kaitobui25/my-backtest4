@@ -28,6 +28,16 @@ def _batches(
         yield configs[start:start + size]
 
 
+def _group_key(cfg: StrategyConfig) -> tuple:
+    """Deterministic ordering key: family, then indicator parameters, then
+    direction, then config_id. Grouping only changes execution order, never
+    config content, so checkpoint/resume and ranking are unaffected."""
+    params_key = tuple(
+        (k, str(v)) for k, v in sorted(cfg.params.items())
+    )
+    return (cfg.family, params_key, cfg.direction, cfg.config_id)
+
+
 class VectorBTBatchEngine:
     def __init__(self, settings: RunSettings):
         settings.validate()
@@ -37,6 +47,7 @@ class VectorBTBatchEngine:
         self,
         df: pd.DataFrame,
         batch: list[StrategyConfig],
+        cache: IndicatorCache | None = None,
     ) -> pd.DataFrame:
         try:
             import vectorbt as vbt
@@ -45,7 +56,16 @@ class VectorBTBatchEngine:
                 "Chưa cài vectorbt. Chạy run.ps1 hoặc pip install -r requirements.txt"
             ) from exc
 
-        cache = IndicatorCache(df)
+        if cache is None:
+            # Legacy per-batch behavior retained only for equivalence testing.
+            cache = IndicatorCache(df)
+        else:
+            # Defensive: the cache must belong to the exact dataframe used by
+            # this batch so indicators are never read from the wrong data.
+            assert cache.df is df, (
+                "IndicatorCache was built from a different dataframe than the "
+                "one passed to this batch."
+            )
         n_rows = len(df)
         n_cols = len(batch)
         index = df.index
@@ -173,6 +193,7 @@ class VectorBTBatchEngine:
         checkpoint_path: str | Path,
         resume: bool,
         label: str,
+        group: bool = True,
     ) -> pd.DataFrame:
         store = CheckpointStore(checkpoint_path)
         if not resume:
@@ -185,6 +206,18 @@ class VectorBTBatchEngine:
             print(f"[{label}] checkpoint đã hoàn tất.")
             return store.load()
 
+        # Deterministic grouping keeps similar configs adjacent so that
+        # indicator computation is reused more effectively across batches.
+        # It only changes execution order; config content, checkpoint/resume
+        # (keyed by config_id) and final ranking are all unaffected.
+        if group:
+            pending = sorted(pending, key=_group_key)
+
+        # One IndicatorCache per run, shared across every batch and discarded
+        # when run() returns. It is never shared between separate engine.run()
+        # calls (Phase 1, Phase 2, TRAIN, VALIDATION, or walk-forward folds).
+        cache = IndicatorCache(df)
+
         total_batches = math.ceil(
             len(pending) / self.settings.batch_size
         )
@@ -192,7 +225,7 @@ class VectorBTBatchEngine:
             _batches(pending, self.settings.batch_size), start=1
         ):
             started = time.perf_counter()
-            rows = self._run_batch(df, batch)
+            rows = self._run_batch(df, batch, cache)
             store.append(rows)
             elapsed = time.perf_counter() - started
             print(

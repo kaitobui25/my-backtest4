@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 import numpy as np
 import pandas as pd
 
@@ -97,8 +99,14 @@ def compare_results(
         for f in BASELINE_FIELDS:
             if f == "trades":
                 continue
-            bv, av = b[f], a[f]
+            # Baseline JSON may serialize inf/nan as strings; coerce to float.
+            bv = float(b[f]) if b[f] is not None else float("nan")
+            av = float(a[f]) if a[f] is not None else float("nan")
             if pd.isna(bv) and pd.isna(av):
+                continue
+            if math.isinf(bv) or math.isinf(av):
+                # infinities are only equal to themselves (same sign).
+                assert bv == av, f"{cid}: {f} differs ({bv} vs {av})"
                 continue
             diff = abs(bv - av)
             assert diff <= atol + rtol * abs(bv), (

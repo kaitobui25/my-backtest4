@@ -1,0 +1,2 @@
+vectorbt[rust]==1.1.0
+pyarrow

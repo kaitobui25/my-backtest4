@@ -1,0 +1,7 @@
+{
+  "target_expectancy_r": 0.225,
+  "fee_per_fill": 0.0005,
+  "slippage_per_fill": 0.0002,
+  "default_mode": "instant",
+  "note": "CLI arguments in run.ps1/search.py are the source of truth."
+}

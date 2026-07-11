@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+venvs/
+
+# Jupyter
+.ipynb_checkpoints/
+/*.ipynb
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Type checking / testing
+.mypy_cache/
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Rust
+rust/target/
+
+# Project-specific
+apps/candlestick-patterns/data
+docs/docs/api
+docs/site/
+
+# Lock files
+uv.lock
+
+# Private
+.mcp.json
+
+# Generated backtest output CSVs
+my_analysis/results/phase1/*/drawdown_curve.csv
+my_analysis/results/phase1/*/equity_curve.csv
+my_analysis/results/phase1/*/trades.csv
+
+
+# Large market data files (regenerate via scripts/download_data.py)
+my_analysis/data/raw/*.parquet
+
+# Python build metadata
+my_analysis/src/my_analysis.egg-info/
+
+cache/*

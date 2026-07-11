@@ -1,0 +1,45 @@
+MY-BACKTEST4 — FINAL RESEARCH REPORT
+========================================================================
+Strategy families tested: 15
+Phase 1 configs tested: 10680
+Phase 2 configs tested: 1378
+Total runtime seconds: 831.00
+Fee per fill: 0.0005
+Slippage per fill: 0.0002
+Reference target: +0.225R/trade
+
+BEST EXPECTANCY
+Config: 415dd941af93e8
+Family: atr_expansion_breakout
+Direction: long
+Mean validation expectancy: -0.186916R
+Median validation expectancy: -0.156349R
+Worst validation fold: -1.003669R
+Positive fold ratio: 40.00%
+Validation trades: 233
+Mean win rate: 31.01%
+Mean avg win: +2.2632R
+Mean avg loss: -1.2825R
+Mean profit factor: 0.9220
+Max validation drawdown: 33.8666R
+Modeled cost/trade: 0.2860R
+Parameters: {"atr_mean_window": 192, "atr_window": 14, "expansion_mult": 1.5, "lookback": 20, "rr": 2.5, "sl_atr": 1.25}
+
+BEST ROBUST
+Config: 0049a2440077d5
+Family: atr_expansion_breakout
+Direction: long
+Robust score: -0.483672
+Mean validation expectancy: -0.224067R
+Positive fold ratio: 25.00%
+Validation trades: 148
+Mean win rate: 26.13%
+Mean profit factor: 0.7590
+Max validation drawdown: 26.8213R
+Modeled cost/trade: 0.1578R
+Parameters: {"atr_mean_window": 192, "atr_window": 14, "expansion_mult": 1.5, "lookback": 48, "rr": 2.5, "sl_atr": 2.25}
+
+CONCLUSION
+Best mean walk-forward expectancy was -0.186916R/trade; no candidate reached +0.225R/trade.
+
+Fast-engine candidates must still be rerun in the Exact Engine before live use.

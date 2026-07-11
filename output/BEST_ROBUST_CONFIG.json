@@ -1,0 +1,20 @@
+{
+  "config_id": "0049a2440077d5",
+  "family": "atr_expansion_breakout",
+  "direction": "long",
+  "params_json": "{\"atr_mean_window\": 192, \"atr_window\": 14, \"expansion_mult\": 1.5, \"lookback\": 48, \"rr\": 2.5, \"sl_atr\": 2.25}",
+  "validation_mean_expectancy_r": -0.22406744678685311,
+  "validation_median_expectancy_r": -0.1723769021936055,
+  "validation_min_expectancy_r": -0.6171477820618008,
+  "validation_std_expectancy_r": 0.267875317140154,
+  "validation_positive_fold_ratio": 0.25,
+  "total_validation_trades": 148,
+  "folds_selected": 4,
+  "validation_mean_winrate": 0.2612606905289832,
+  "validation_mean_avg_win_r": 2.3436715084426223,
+  "validation_mean_avg_loss_r": -1.1344599116038436,
+  "validation_mean_profit_factor_r": 0.7590110672928969,
+  "validation_max_drawdown_r": 26.82130884513514,
+  "cost_r_per_trade": 0.15778359335568956,
+  "robust_score": -0.4836717720235968
+}

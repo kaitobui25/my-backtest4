@@ -72,12 +72,13 @@ if (-not (Test-Path $marker)) {
 }
 
 Write-Host ""
-Write-Host "RUNNING FAST SEARCH" -ForegroundColor Cyan
+Write-Host "RUNNING SAFE FAST SEARCH" -ForegroundColor Cyan
 Write-Host "Data: $Data"
 Write-Host "Mode: $Mode"
+Write-Host "Gates: TRAIN >= 300 trades; VALIDATION >= 50 trades"
 Write-Host ""
 
-& $venvPython ".\search.py" `
+& $venvPython ".\search_gate.py" `
     --data $Data `
     --mode $Mode `
     --output ".\output"

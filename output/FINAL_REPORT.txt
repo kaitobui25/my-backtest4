@@ -1,45 +1,45 @@
 MY-BACKTEST4 — FINAL RESEARCH REPORT
 ========================================================================
 Strategy families tested: 15
-Phase 1 configs tested: 10680
-Phase 2 configs tested: 1378
-Total runtime seconds: 831.00
+Phase 1 configs tested: 10872
+Phase 2 configs tested: 1380
+Total runtime seconds: 567.30
 Fee per fill: 0.0005
 Slippage per fill: 0.0002
 Reference target: +0.225R/trade
 
 BEST EXPECTANCY
-Config: 415dd941af93e8
-Family: atr_expansion_breakout
-Direction: long
-Mean validation expectancy: -0.186916R
-Median validation expectancy: -0.156349R
-Worst validation fold: -1.003669R
+Config: 96291dd0b2be5e
+Family: bollinger_fade
+Direction: short
+Mean validation expectancy: +0.033403R
+Median validation expectancy: -0.095982R
+Worst validation fold: -0.405894R
 Positive fold ratio: 40.00%
-Validation trades: 233
-Mean win rate: 31.01%
-Mean avg win: +2.2632R
-Mean avg loss: -1.2825R
-Mean profit factor: 0.9220
-Max validation drawdown: 33.8666R
-Modeled cost/trade: 0.2860R
-Parameters: {"atr_mean_window": 192, "atr_window": 14, "expansion_mult": 1.5, "lookback": 20, "rr": 2.5, "sl_atr": 1.25}
+Validation trades: 121
+Mean win rate: 40.20%
+Mean avg win: +1.8381R
+Mean avg loss: -1.1857R
+Mean profit factor: 1.1503
+Max validation drawdown: 15.2640R
+Modeled cost/trade: 0.2165R
+Parameters: {"atr_window": 14, "regime_ema": 200, "rr": 2.0, "sl_atr": 2.5, "std_mult": 2.5, "window": 60}
 
 BEST ROBUST
-Config: 0049a2440077d5
-Family: atr_expansion_breakout
-Direction: long
-Robust score: -0.483672
-Mean validation expectancy: -0.224067R
-Positive fold ratio: 25.00%
-Validation trades: 148
-Mean win rate: 26.13%
-Mean profit factor: 0.7590
-Max validation drawdown: 26.8213R
-Modeled cost/trade: 0.1578R
-Parameters: {"atr_mean_window": 192, "atr_window": 14, "expansion_mult": 1.5, "lookback": 48, "rr": 2.5, "sl_atr": 2.25}
+Config: 37496ad3f29237
+Family: roc_momentum
+Direction: short
+Robust score: -0.107709
+Mean validation expectancy: -0.021416R
+Positive fold ratio: 60.00%
+Validation trades: 550
+Mean win rate: 31.93%
+Mean profit factor: 0.9762
+Max validation drawdown: 28.0611R
+Modeled cost/trade: 0.1633R
+Parameters: {"atr_window": 14, "regime_ema": 200, "roc_window": 12, "rr": 2.5, "sl_atr": 2.25, "threshold": 0.01}
 
 CONCLUSION
-Best mean walk-forward expectancy was -0.186916R/trade; no candidate reached +0.225R/trade.
+Best mean walk-forward expectancy was +0.033403R/trade; no candidate reached +0.225R/trade.
 
 Fast-engine candidates must still be rerun in the Exact Engine before live use.

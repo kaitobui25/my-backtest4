@@ -21,7 +21,7 @@ from btsearch.ranking import (
     rank_walk_forward_robust,
     top_by_family,
 )
-from btsearch.report import write_final_report, write_json
+from btsearch.report import safe_print, write_final_report, write_json
 from btsearch.strategies import REGISTRY
 from btsearch.walk_forward import run_walk_forward
 
@@ -54,6 +54,7 @@ def run_pipeline(
             "02_phase1_top_by_family.csv",
             "04_walk_forward_results.parquet",
             "04_walk_forward_results.csv",
+            "04b_walk_forward_aggregate.csv",
             "05_top_expectancy.csv",
             "06_top_robust.csv",
             "BEST_EXPECTANCY_CONFIG.json",
@@ -169,6 +170,9 @@ def run_pipeline(
     )
 
     aggregate = aggregate_walk_forward(walk_forward)
+    aggregate.to_csv(
+        output_dir / "04b_walk_forward_aggregate.csv", index=False
+    )
     top_expectancy = rank_walk_forward_expectancy(
         aggregate, settings.min_trades_ranking
     )
@@ -207,4 +211,4 @@ def run_pipeline(
 
     print("")
     print("=" * 72)
-    print((output_dir / "FINAL_REPORT.txt").read_text(encoding="utf-8"))
+    safe_print((output_dir / "FINAL_REPORT.txt").read_text(encoding="utf-8"))

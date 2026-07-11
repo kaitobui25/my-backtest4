@@ -1,14 +1,23 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import json
 from pathlib import Path
 
 import pandas as pd
 
 from btsearch.config import RunSettings, StrategyConfig
 from btsearch.engine import VectorBTBatchEngine
-from btsearch.ranking import main_ranking
+
+_VALIDATION_COLUMNS = {
+    "trades": "validation_trades",
+    "expectancy_r": "validation_expectancy_r",
+    "winrate": "validation_winrate",
+    "avg_win_r": "validation_avg_win_r",
+    "avg_loss_r": "validation_avg_loss_r",
+    "profit_factor_r": "validation_profit_factor_r",
+    "max_drawdown_r": "validation_max_drawdown_r",
+    "cost_r_per_trade": "validation_cost_r_per_trade",
+}
 
 
 @dataclass(frozen=True)
@@ -56,14 +65,6 @@ def build_expanding_folds(
     return folds
 
 
-def _row_to_config(row: pd.Series) -> StrategyConfig:
-    return StrategyConfig(
-        family=str(row["family"]),
-        direction=str(row["direction"]),
-        params=json.loads(row["params_json"]),
-    )
-
-
 def run_walk_forward(
     df: pd.DataFrame,
     candidate_configs: list[StrategyConfig],
@@ -72,6 +73,15 @@ def run_walk_forward(
     resume: bool,
     first_validation_start: pd.Timestamp,
 ) -> pd.DataFrame:
+    """Validate a fixed shortlist of configs on every walk-forward fold.
+
+    The shortlist (``candidate_configs``) is frozen by the caller after Phase 1
+    and Phase 2. Every config in that shortlist is evaluated on the validation
+    window of each fold using the same out-of-sample data; no per-fold
+    re-selection is performed. The returned frame has one row per
+    (config, fold) so downstream aggregation can confirm each config was
+    tested on every fold.
+    """
     engine = VectorBTBatchEngine(settings)
     all_rows: list[pd.DataFrame] = []
 
@@ -79,83 +89,31 @@ def run_walk_forward(
         df.index,
         first_validation_start=first_validation_start,
     ):
-        train = df.loc[
-            (df.index >= fold.train_start)
-            & (df.index < fold.train_end)
-        ]
         validation = df.loc[
             (df.index >= fold.validation_start)
             & (df.index < fold.validation_end)
         ]
-        if len(train) < 1_000 or len(validation) < 500:
+        if len(validation) < 500:
             continue
 
-        train_path = output_dir / "walk_forward_checkpoints" / (
-            f"{fold.fold_id}_train.parquet"
-        )
-        train_results = engine.run(
-            train,
-            candidate_configs,
-            train_path,
-            resume,
-            f"{fold.fold_id}-TRAIN",
-        )
-        ranked = main_ranking(
-            train_results,
-            min_trades=max(30, settings.min_trades_ranking // 2),
-        )
-        selected = ranked.head(
-            settings.walk_forward_select_per_fold
-        )
-        if selected.empty:
-            continue
-
-        selected_configs = [
-            _row_to_config(row)
-            for _, row in selected.iterrows()
-        ]
         val_path = output_dir / "walk_forward_checkpoints" / (
             f"{fold.fold_id}_validation.parquet"
         )
         validation_results = engine.run(
             validation,
-            selected_configs,
+            candidate_configs,
             val_path,
             resume,
             f"{fold.fold_id}-VALIDATION",
         )
 
-        merged = selected[[
-            "config_id", "family", "direction", "params_json",
-            "trades", "expectancy_r",
-        ]].merge(
-            validation_results[[
-                "config_id", "trades", "expectancy_r",
-                "winrate", "avg_win_r", "avg_loss_r",
-                "profit_factor_r", "max_drawdown_r",
-                "cost_r_per_trade",
-            ]],
-            on="config_id",
-            suffixes=("_train", "_validation"),
+        renamed = validation_results.rename(
+            columns=_VALIDATION_COLUMNS
         )
-        merged = merged.rename(columns={
-            "trades_train": "train_trades",
-            "expectancy_r_train": "train_expectancy_r",
-            "trades_validation": "validation_trades",
-            "expectancy_r_validation": "validation_expectancy_r",
-            "winrate": "validation_winrate",
-            "avg_win_r": "validation_avg_win_r",
-            "avg_loss_r": "validation_avg_loss_r",
-            "profit_factor_r": "validation_profit_factor_r",
-            "max_drawdown_r": "validation_max_drawdown_r",
-            "cost_r_per_trade": "validation_cost_r_per_trade",
-        })
-        merged["fold_id"] = fold.fold_id
-        merged["train_start"] = fold.train_start
-        merged["train_end"] = fold.train_end
-        merged["validation_start"] = fold.validation_start
-        merged["validation_end"] = fold.validation_end
-        all_rows.append(merged)
+        renamed["fold_id"] = fold.fold_id
+        renamed["validation_start"] = fold.validation_start
+        renamed["validation_end"] = fold.validation_end
+        all_rows.append(renamed)
 
     if not all_rows:
         return pd.DataFrame()

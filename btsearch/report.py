@@ -1,8 +1,27 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 import pandas as pd
+
+
+def safe_print(text: str) -> None:
+    """Print ``text`` to stdout, tolerating non-UTF-8 consoles.
+
+    On consoles whose encoding cannot represent every character (e.g. cp932
+    on Japanese Windows), ``print`` raises ``UnicodeEncodeError``. In that
+    case the text is re-encoded with replacement characters so the report
+    still reaches the user instead of crashing the run.
+    """
+    try:
+        print(text)
+    except UnicodeEncodeError:
+        encoding = getattr(sys.stdout, "encoding", None) or "utf-8"
+        safe_text = text.encode(encoding, errors="replace").decode(
+            encoding, errors="replace"
+        )
+        print(safe_text)
 
 
 def _safe_float(row: pd.Series, key: str) -> float:
@@ -65,13 +84,13 @@ def write_final_report(
             f"Family: {best_exp['family']}",
             f"Direction: {best_exp['direction']}",
             f"Mean validation expectancy: "
-            f"{_safe_float(best_exp, 'validation_mean_expectancy_r'):+.6f}R",
+            f"{_safe_float(best_exp, 'macro_expectancy_r'):+.6f}R",
             f"Median validation expectancy: "
-            f"{_safe_float(best_exp, 'validation_median_expectancy_r'):+.6f}R",
+            f"{_safe_float(best_exp, 'median_expectancy_r'):+.6f}R",
             f"Worst validation fold: "
-            f"{_safe_float(best_exp, 'validation_min_expectancy_r'):+.6f}R",
+            f"{_safe_float(best_exp, 'worst_fold_expectancy_r'):+.6f}R",
             f"Positive fold ratio: "
-            f"{_safe_float(best_exp, 'validation_positive_fold_ratio'):.2%}",
+            f"{_safe_float(best_exp, 'positive_fold_ratio'):.2%}",
             f"Validation trades: {int(best_exp['total_validation_trades'])}",
             f"Mean win rate: {_safe_float(best_exp, 'validation_mean_winrate'):.2%}",
             f"Mean avg win: {_safe_float(best_exp, 'validation_mean_avg_win_r'):+.4f}R",
@@ -97,9 +116,9 @@ def write_final_report(
             f"Direction: {best_rob['direction']}",
             f"Robust score: {_safe_float(best_rob, 'robust_score'):+.6f}",
             f"Mean validation expectancy: "
-            f"{_safe_float(best_rob, 'validation_mean_expectancy_r'):+.6f}R",
+            f"{_safe_float(best_rob, 'macro_expectancy_r'):+.6f}R",
             f"Positive fold ratio: "
-            f"{_safe_float(best_rob, 'validation_positive_fold_ratio'):.2%}",
+            f"{_safe_float(best_rob, 'positive_fold_ratio'):.2%}",
             f"Validation trades: {int(best_rob['total_validation_trades'])}",
             f"Mean win rate: {_safe_float(best_rob, 'validation_mean_winrate'):.2%}",
             f"Mean profit factor: {_safe_float(best_rob, 'validation_mean_profit_factor_r'):.4f}",
@@ -115,7 +134,7 @@ def write_final_report(
             "No statistically usable candidate was found in the tested space."
         )
     else:
-        value = _safe_float(best_exp, "validation_mean_expectancy_r")
+        value = _safe_float(best_exp, "macro_expectancy_r")
         if value >= target_reference_r:
             lines.append(
                 f"At least one candidate exceeded "

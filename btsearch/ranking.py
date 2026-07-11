@@ -39,6 +39,7 @@ def aggregate_walk_forward(
     if folds.empty:
         return pd.DataFrame()
 
+    total_folds = int(folds["fold_id"].nunique())
     grouped = folds.groupby(
         ["config_id", "family", "direction", "params_json"],
         dropna=False,
@@ -47,21 +48,38 @@ def aggregate_walk_forward(
     for keys, group in grouped:
         validation = group["validation_expectancy_r"].astype(float)
         trades = group["validation_trades"].astype(int)
-        positive_ratio = float((validation > 0).mean())
-        mean = float(validation.mean())
+        valid = validation.notna() & trades.notna()
+        exp_valid = validation[valid]
+        trade_valid = trades[valid]
+
+        macro = float(validation.mean()) if len(validation) else float("nan")
         std = float(validation.std(ddof=0))
+        median_value = float(validation.median())
         min_value = float(validation.min())
-        total_trades = int(trades.sum())
+        positive_ratio = float((validation > 0).mean())
+        total_trades = int(trade_valid.sum())
+        folds_tested = int(valid.sum())
+        all_folds_tested = folds_tested == total_folds
+
+        # micro_expectancy_r is trade-weighted across folds:
+        #   sum(validation_expectancy_r * validation_trades)
+        #   / sum(validation_trades)
+        if total_trades > 0:
+            micro = float(
+                (exp_valid * trade_valid).sum() / total_trades
+            )
+        else:
+            micro = float("nan")
 
         # Robust score:
-        # mean expectancy
+        # macro expectancy
         # - 0.5 * fold dispersion
         # - 0.10R for every fraction of non-positive folds
         # - up to 0.10R small-sample penalty below 300 validation trades.
         negative_fold_penalty = 0.10 * (1.0 - positive_ratio)
         sample_penalty = 0.10 * max(0.0, (300 - total_trades) / 300)
         robust_score = (
-            mean
+            macro
             - 0.5 * std
             - negative_fold_penalty
             - sample_penalty
@@ -72,13 +90,16 @@ def aggregate_walk_forward(
             "family": keys[1],
             "direction": keys[2],
             "params_json": keys[3],
-            "validation_mean_expectancy_r": mean,
-            "validation_median_expectancy_r": float(validation.median()),
-            "validation_min_expectancy_r": min_value,
+            "macro_expectancy_r": macro,
+            "micro_expectancy_r": micro,
+            "median_expectancy_r": median_value,
+            "worst_fold_expectancy_r": min_value,
             "validation_std_expectancy_r": std,
-            "validation_positive_fold_ratio": positive_ratio,
+            "positive_fold_ratio": positive_ratio,
             "total_validation_trades": total_trades,
-            "folds_selected": int(len(group)),
+            "folds_tested": folds_tested,
+            "total_folds": total_folds,
+            "all_folds_tested": bool(all_folds_tested),
             "validation_mean_winrate": float(
                 group["validation_winrate"].mean()
             ),
@@ -109,12 +130,14 @@ def rank_walk_forward_expectancy(
 ) -> pd.DataFrame:
     if aggregate.empty:
         return aggregate
-    return aggregate.loc[
-        aggregate["total_validation_trades"] >= min_trades
-    ].sort_values(
+    eligible = aggregate.loc[
+        (aggregate["all_folds_tested"])
+        & (aggregate["total_validation_trades"] >= min_trades)
+    ]
+    return eligible.sort_values(
         [
-            "validation_mean_expectancy_r",
-            "validation_positive_fold_ratio",
+            "micro_expectancy_r",
+            "positive_fold_ratio",
             "total_validation_trades",
         ],
         ascending=[False, False, False],
@@ -127,12 +150,14 @@ def rank_walk_forward_robust(
 ) -> pd.DataFrame:
     if aggregate.empty:
         return aggregate
-    return aggregate.loc[
-        aggregate["total_validation_trades"] >= min_trades
-    ].sort_values(
+    eligible = aggregate.loc[
+        (aggregate["all_folds_tested"])
+        & (aggregate["total_validation_trades"] >= min_trades)
+    ]
+    return eligible.sort_values(
         [
             "robust_score",
-            "validation_mean_expectancy_r",
+            "micro_expectancy_r",
             "total_validation_trades",
         ],
         ascending=[False, False, False],

@@ -1,0 +1,16 @@
+1. Copy BTC 15m parquet vào folder này.
+
+2. Mở PowerShell tại folder:
+
+   cd C:\phong\AI\finance\my-backtest4
+
+3. Chạy:
+
+   .\run.ps1 -Data "ten-file.parquet" -Mode coarse
+
+4. Xem:
+
+   output\FINAL_REPORT.txt
+
+Resume:
+   .\run.ps1 -Data "ten-file.parquet" -Mode coarse -Resume

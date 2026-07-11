@@ -1,7 +1,9 @@
 {
-  "target_expectancy_r": 0.225,
+  "mode": "coarse",
   "fee_per_fill": 0.0005,
   "slippage_per_fill": 0.0002,
-  "default_mode": "instant",
-  "note": "CLI arguments in run.ps1/search.py are the source of truth."
+  "batch_size": 48,
+  "min_trades_ranking": 100,
+  "reference_target_r": 0.225,
+  "note": "CLI/PowerShell arguments override these documented defaults."
 }

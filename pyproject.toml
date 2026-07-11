@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=83"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "my-backtest4"
+version = "1.0.0"
+description = "Fast BTC 15m strategy research engine powered by vectorbt"
+requires-python = ">=3.11,<3.15"
+dependencies = [
+  "vectorbt[rust]==1.1.0",
+  "pyarrow>=16",
+  "pandas>=3.0.3,<4.0",
+  "numpy>=2.4.6"
+]
+
+[tool.setuptools.packages.find]
+include = ["btsearch*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

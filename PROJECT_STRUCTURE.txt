@@ -1,0 +1,21 @@
+my-backtest4/
+├── run.ps1
+├── RUN_NOW.cmd
+├── search.py
+├── config.json
+├── requirements.txt
+├── pyproject.toml
+├── btsearch/
+│   ├── cli.py
+│   ├── pipeline.py
+│   ├── engine.py
+│   ├── grids.py
+│   ├── indicators.py
+│   ├── metrics.py
+│   ├── ranking.py
+│   ├── walk_forward.py
+│   ├── checkpoint.py
+│   ├── report.py
+│   └── strategies/
+├── tests/
+└── output/

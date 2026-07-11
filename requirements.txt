@@ -1,2 +1,5 @@
 vectorbt[rust]==1.1.0
-pyarrow
+pyarrow>=16
+pandas>=3.0.3,<4.0
+numpy>=2.4.6
+pytest>=8

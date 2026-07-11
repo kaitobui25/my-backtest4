@@ -1,0 +1,14 @@
+Build validation completed.
+
+- Python syntax compilation: PASS
+- Pytest: 12 tests PASS
+- Coarse configs with volume: 10,872
+- Coarse configs without volume: 9,171
+- Full configs with volume: 202,761
+- Strategy families with volume: 15
+- Signal-generation smoke test: PASS for all 15 families
+- Engine batch smoke test: PASS with a vectorbt-compatible stub
+
+The actual market-data run was not executed because the BTC Parquet file
+is intentionally not included. Drop the Parquet file into the project and
+run run.ps1.
